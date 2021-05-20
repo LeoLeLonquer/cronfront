@@ -115,8 +115,8 @@ generate_cond(){
     freq=$(echo "$cond_string" | cut -d '/' -f2)
     [[ $min -eq 0 ]] && card=$((max + 1)) || card=$max
     find_lcm $freq $card
-    [[ $min -gt 0 ]] && adjusted_lcm=$((lcm + $min)) || adjusted_lcm=$lcm
-    cond="$(seq -s' ' $min $freq $adjusted_lcm)" 
+    shifted_lcm=$((lcm + $min))
+    cond="$(seq -s' ' $min $freq $shifted_lcm)" 
 
   else 
     echo "Error interpreting $cond_string"
@@ -158,9 +158,9 @@ validate_cond(){
   if [[ "$cond_string" =~ ^\*$ ]]; then
     return_val=0
   elif [[ "$cond_string" =~ ^\*/[[:digit:]]+$ ]]; then
-    lcm="${cron_cond##* }" # get lcm at last position of cron_cond 
-    min="${cron_cond%% *}" # get min at firs position of cron_cond
-    [[ $min -gt 0 ]] && adjusted_lcm=$((lcm - $min)) || adjusted_lcm=$lcm
+    shifted_lcm="${cron_cond##* }" # get shifted_lcm at last position of cron_cond 
+    min="${cron_cond%% *}" # get min at first position of cron_cond
+    lcm=$((shifted_lcm - $min))
     
     var_counter_modulo=$((var_counter % adjusted_lcm))
     regex='\b'$var_counter_modulo'\b'

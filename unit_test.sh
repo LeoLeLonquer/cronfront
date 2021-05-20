@@ -39,6 +39,7 @@ expected_output=0
 check_cond_minute "$cond_string_minute" 
 generate_cond_minute "$cond_string_minute" 
 validate_cond_minute 
+echo "cron_cond: $cron_cond"
 output=$valid_minute
 [[ $output -eq $expected_output ]] && print_green "SUCCESS" || print_red "FAILED"
 
@@ -50,6 +51,7 @@ expected_output=0
 check_cond_minute "$cond_string_minute" 
 generate_cond_minute "$cond_string_minute" 
 validate_cond_minute 
+echo "cron_cond: $cron_cond"
 output=$valid_minute
 [[ $output -eq $expected_output ]] && print_green "SUCCESS" || print_red "FAILED"
 
@@ -61,6 +63,7 @@ expected_output=0
 check_cond_minute "$cond_string_minute" 
 generate_cond_minute "$cond_string_minute" 
 validate_cond_minute 
+echo "cron_cond: $cron_cond"
 output=$valid_minute
 [[ $output -eq $expected_output ]] && print_green "SUCCESS" || print_red "FAILED"
 
@@ -72,6 +75,7 @@ expected_output=1
 check_cond_minute "$cond_string_minute" 
 generate_cond_minute "$cond_string_minute" 
 validate_cond_minute 
+echo "cron_cond: $cron_cond"
 output=$valid_minute
 [[ $output -eq $expected_output ]] && print_green "SUCCESS" || print_red "FAILED"
 
@@ -83,6 +87,7 @@ expected_output=0
 check_cond_minute "$cond_string_minute" 
 generate_cond_minute "$cond_string_minute" 
 validate_cond_minute 
+echo "cron_cond: $cron_cond"
 output=$valid_minute
 [[ $output -eq $expected_output ]] && print_green "SUCCESS" || print_red "FAILED"
 
@@ -94,6 +99,7 @@ expected_output=1
 check_cond_minute "$cond_string_minute" 
 generate_cond_minute "$cond_string_minute" 
 validate_cond_minute 
+echo "cron_cond: $cron_cond"
 output=$valid_minute
 [[ $output -eq $expected_output ]] && print_green "SUCCESS" || print_red "FAILED"
 
@@ -105,6 +111,7 @@ expected_output=0
 check_cond_minute "$cond_string_minute" 
 generate_cond_minute "$cond_string_minute" 
 validate_cond_minute 
+echo "cron_cond: $cron_cond"
 output=$valid_minute
 [[ $output -eq $expected_output ]] && print_green "SUCCESS" || print_red "FAILED"
 
@@ -116,8 +123,34 @@ expected_output=1
 check_cond_minute "$cond_string_minute" 
 generate_cond_minute "$cond_string_minute" 
 validate_cond_minute 
+echo "cron_cond: $cron_cond"
 output=$valid_minute
 [[ $output -eq $expected_output ]] && print_green "SUCCESS" || print_red "FAILED"
+
+echo ""
+print_bold "test 50-15 - 10"
+cond_string_minute="50-15"
+minute=10
+expected_output=0
+check_cond_minute "$cond_string_minute" 
+generate_cond_minute "$cond_string_minute" 
+validate_cond_minute 
+echo "cron_cond: $cron_cond"
+output=$valid_minute
+[[ $output -eq $expected_output ]] && print_green "SUCCESS" || print_red "FAILED"
+
+echo ""
+print_bold "test 50-15 - 10"
+cond_string_minute="50-15"
+minute=20
+expected_output=1
+check_cond_minute "$cond_string_minute" 
+generate_cond_minute "$cond_string_minute" 
+validate_cond_minute 
+echo "cron_cond: $cron_cond"
+output=$valid_minute
+[[ $output -eq $expected_output ]] && print_green "SUCCESS" || print_red "FAILED"
+
 
 #echo "test 1"
 #generate_cond "1" 0 59

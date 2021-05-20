@@ -88,31 +88,31 @@ generate_cond(){
   max=$3
 
   if [[ "$cond_string" =~ ^\*$ ]]; then
-    cond=( "*" )
+    cond=''
 
   elif [[ "$cond_string" =~ ^[[:digit:]]+$ ]]; then
-    cond=( "$cond_string" )
+    cond="$cond_string"
 
   elif [[ "$cond_string" =~ , ]]; then
-    cond=( $(echo "$cond_string" | tr ',' ' ') )
+    cond=$(echo "$cond_string" | tr ',' ' ')
 
   elif [[ "$cond_string" =~ - ]]; then
     leftlimit=$(echo "$cond_string" | cut -d '-' -f1)
     rightlimit=$(echo "$cond_string" | cut -d '-' -f2)
 
     if [[ $leftlimit -eq $rightlimit ]]; then
-      cond=( $leftlimit )
+      cond="$leftlimit"
     elif [[ $leftlimit -lt $rightlimit ]]; then
-      cond=( $(seq $leftlimit $rightlimit ) )
+      cond="$(seq -s' ' $leftlimit $rightlimit )"
     elif [[ $leftlimit -gt $rightlimit ]]; then
-      cond=( $(seq $min $rightlimit) $(seq $leftlimit $max) )
+      cond="$(seq -s' ' $min $rightlimit) $(seq -s' ' $leftlimit $max)"
     fi
 
   elif [[ "$cond_string" =~ ^\*/[[:digit:]]+$ ]]; then
     freq=$(echo "$cond_string" | cut -d '/' -f2)
     [[ $min -eq 0 ]] && card=$((max + 1)) || card=$max
     find_lcm $freq $card
-    cond=( $(seq $min $freq $lcm ) )
+    cond="$(seq -s' ' $min $freq $lcm)" 
 
   else 
     echo "Error interpreting $cond_string"
@@ -122,22 +122,22 @@ generate_cond(){
 
 generate_cond_minute(){
   generate_cond "$1" $min_minute $max_minute
-  minute_cond="${cond[@]}"
+  minute_cond="$cond"
 }
 
 generate_cond_hour(){
   generate_cond "$1" $min_hour $max_hour
-  hour_cond="${cond[@]}"
+  hour_cond="$cond"
 }
 
 generate_cond_day(){
   generate_cond "$1" $min_day $max_day
-  day_cond="${cond[@]}"
+  day_cond="$cond"
 }
 
 generate_cond_month(){
   generate_cond "$1" $min_month $max_month
-  month_cond="${cond[@]}"
+  month_cond="$cond"
 }
 
 #generate_cond_weekday(){
@@ -147,7 +147,7 @@ generate_cond_month(){
 
 validate_cond(){
   cond_string="$1"
-  cron_cond="${!2}"
+  cron_cond="$2"
   var=$3
   var_counter=$4
 
@@ -165,22 +165,22 @@ validate_cond(){
 }
 
 validate_cond_minute(){
-  validate_cond "$cond_string_minute" "minute_cond" $minute $minute_counter
+  validate_cond "$cond_string_minute" "$minute_cond" $minute $minute_counter
   valid_minute=$return_val
 }
 
 validate_cond_hour(){
-  validate_cond "$cond_string_hour" "hour_cond" $hour $hour_counter
+  validate_cond "$cond_string_hour" "$hour_cond" $hour $hour_counter
   valid_hour=$return_val
 }
 
 validate_cond_day(){
-  validate_cond "$cond_string_day" "day_cond" $day $day_counter
+  validate_cond "$cond_string_day" "$day_cond" $day $day_counter
   valid_day=$return_val
 }
 
 validate_cond_month(){
-  validate_cond "$cond_string_month" "month_cond" $month $month_counter
+  validate_cond "$cond_string_month" "$month_cond" $month $month_counter
   valid_month=$return_val
 }
 

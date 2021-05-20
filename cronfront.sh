@@ -2,12 +2,6 @@
 
 set -e
 
-cond_string_minute="$1"
-cond_string_hour="$2"
-cond_string_day="$3"
-cond_string_month="$4"
-cond_string_weekday="$5"
-
 min_minute=0
 max_minute=59
 min_hour=0
@@ -16,8 +10,6 @@ min_day=1
 max_day=31
 min_month=1
 max_month=12
-maxmax=100000
-
 
 check_cond_interval(){
   if [[ $1 -lt $2 ]] || [[ $1 -gt $3 ]]; then
@@ -53,7 +45,7 @@ check_cond(){
 
   elif [[ "$cond_string" =~ ^\*/[[:digit:]]+$ ]]; then
     freq=$(echo $cond_string | cut -d '/' -f2)
-    check_cond_interval $freq $min $maxmax
+    [[ $freq -lt $min ]] && echo "freq $freq under $min" && exit 1 || true
 
   else 
     echo "Error interpreting $cond_string"
@@ -156,7 +148,6 @@ generate_cond_month(){
 validate_cond(){
   cond_string="$1"
   cron_cond="${!2}"
-  echo cron_cond: $cron_cond
   var=$3
   var_counter=$4
 
@@ -178,26 +169,42 @@ validate_cond_minute(){
   valid_minute=$return_val
 }
 
-#validate_cond_hour(){
-#}
-#
-#validate_cond_day(){
-#}
-#
-#validate_cond_month(){
-#}
+validate_cond_hour(){
+  validate_cond "$cond_string_hour" "hour_cond" $hour $hour_counter
+  valid_hour=$return_val
+}
+
+validate_cond_day(){
+  validate_cond "$cond_string_day" "day_cond" $day $day_counter
+  valid_day=$return_val
+}
+
+validate_cond_month(){
+  validate_cond "$cond_string_month" "month_cond" $month $month_counter
+  valid_month=$return_val
+}
 
 
 if [[ "$0" =~ cronfront\.sh ]]; then
-check_cond_minute "$1" 
-check_cond_hour "$2"
-check_cond_day "$3"
-check_cond_month "$4"
+cron_cond_string="$1"
+#cond_string_seconds="$1"
+cond_string_minute="$(echo "$cron_cond_string" | cut -d ' ' -f1)"
+cond_string_hour="$(echo "$cron_cond_string" | cut -d ' ' -f2)"
+cond_string_day="$(echo "$cron_cond_string" | cut -d ' ' -f3)"
+cond_string_month="$(echo "$cron_cond_string" | cut -d ' ' -f4)"
+cond_string_weekday="$(echo "$cron_cond_string" | cut -d ' ' -f5)"
+shift
+commands=$@
 
-generate_cond_minute "$1" 
-generate_cond_hour "$2"
-generate_cond_day "$3"
-generate_cond_month "$4"
+check_cond_minute "$cond_string_minute" 
+check_cond_hour "$cond_string_hour"
+check_cond_day "$cond_string_day"
+check_cond_month "$cond_string_month"
+
+generate_cond_minute "$cond_string_minute" 
+generate_cond_hour "$cond_string_hour"
+generate_cond_day "$cond_string_day"
+generate_cond_month "$cond_string_month"
 
 minute_counter=0
 hour_counter=0
@@ -218,8 +225,9 @@ do
   validate_cond_hour
   validate_cond_day
   validate_cond_month
-  echo output: $valid_minute
-  #validate_cond_minute && validate_cond_hour && validate_cond_day && validate_cond_month 
+  if ! (( $valid_minute + $valid_hour + $valid_day + $valid_month )); then
+    eval "$commands &"
+  fi
 
   sleep 60
   minute_counter=$((minute_counter + 1))

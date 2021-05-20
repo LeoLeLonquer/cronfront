@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 . cronfront.sh
 
@@ -26,6 +26,7 @@ minute_counter=0
 hour_counter=0
 day_counter=1
 month_counter=1
+weekday_counter=$min_weekday
 
 echo "date: ${now_date[@]}"
 echo "counters: $minute_counter $hour_counter $day_counter $month_counter"
@@ -150,6 +151,53 @@ validate_cond_minute
 echo "cron_cond: $cron_cond"
 output=$valid_minute
 [[ $output -eq $expected_output ]] && print_green "SUCCESS" || print_red "FAILED"
+
+echo ""
+print_bold "test weekday 1 - 1"
+cond_string_weekday="1"
+weekday=1
+expected_output=0
+check_cond_weekday "$cond_string_weekday" 
+generate_cond_weekday "$cond_string_weekday" 
+validate_cond_weekday 
+echo "cron_cond: $cron_cond"
+output=$valid_weekday
+[[ $output -eq $expected_output ]] && print_green "SUCCESS" || print_red "FAILED"
+
+echo ""
+print_bold "test weekday */2 - 1"
+cond_string_weekday="*/3"
+weekday=1
+expected_output=0
+check_cond_weekday "$cond_string_weekday" 
+generate_cond_weekday "$cond_string_weekday" 
+validate_cond_weekday 
+echo "cron_cond: $cron_cond"
+output=$valid_weekday
+[[ $output -eq $expected_output ]] && print_green "SUCCESS" || print_red "FAILED"
+
+
+
+#echo ""
+#print_bold "test 0-4/2 - 2"
+#cond_string_minute='0-4/2'
+#minute=2
+#minute_counter=1
+#expected_output=0
+#check_cond_minute "$cond_string_minute" 
+#generate_cond_minute "$cond_string_minute" 
+#validate_cond_minute 
+#echo "cron_cond: $cron_cond"
+#output=$valid_minute
+#[[ $output -eq $expected_output ]] && print_green "SUCCESS" || print_red "FAILED"
+
+
+
+
+
+
+
+
 
 
 #echo "test 1"

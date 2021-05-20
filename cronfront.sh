@@ -10,6 +10,8 @@ min_day=1
 max_day=31
 min_month=1
 max_month=12
+min_weekday=1
+max_weekday=7
 
 check_cond_interval(){
   if [[ $1 -lt $2 ]] || [[ $1 -gt $3 ]]; then
@@ -67,11 +69,12 @@ check_cond_day(){
 }
 
 check_cond_month(){
-  check_cond "$1" $min_month $max_month
+  check_cond "$1" $min_month $max_month 
 }
 
-#check_cond_weekday(){
-#}
+check_cond_weekday(){
+  check_cond "$1" $min_weekday $max_weekday 
+}
 
 find_gcd(){
   ! (( $1 % $2 )) && gcd=$2 || find_gcd $2 $(( $1 % $2 ))
@@ -112,7 +115,8 @@ generate_cond(){
     freq=$(echo "$cond_string" | cut -d '/' -f2)
     [[ $min -eq 0 ]] && card=$((max + 1)) || card=$max
     find_lcm $freq $card
-    cond="$(seq -s' ' $min $freq $lcm)" 
+    [[ $min -gt 0 ]] && adjusted_lcm=$((lcm + $min)) || adjusted_lcm=$lcm
+    cond="$(seq -s' ' $min $freq $adjusted_lcm)" 
 
   else 
     echo "Error interpreting $cond_string"
@@ -140,10 +144,10 @@ generate_cond_month(){
   month_cond="$cond"
 }
 
-#generate_cond_weekday(){
-##  generate_cond $1 $min_minute $max_minute 
-##  minute_cond="${cond[@]}"
-#}
+generate_cond_weekday(){
+  generate_cond $1 $min_weekday $max_weekday
+  weekday_cond="$cond"
+}
 
 validate_cond(){
   cond_string="$1"
@@ -155,7 +159,10 @@ validate_cond(){
     return_val=0
   elif [[ "$cond_string" =~ ^\*/[[:digit:]]+$ ]]; then
     lcm="${cron_cond##* }" # get lcm at last position of cron_cond 
-    var_counter_modulo=$((var_counter % lcm))
+    min="${cron_cond%% *}" # get min at firs position of cron_cond
+    [[ $min -gt 0 ]] && adjusted_lcm=$((lcm - $min)) || adjusted_lcm=$lcm
+    
+    var_counter_modulo=$((var_counter % adjusted_lcm))
     regex='\b'$var_counter_modulo'\b'
     [[ "$cron_cond" =~ $regex ]] && return_val=0 || return_val=1
   else
@@ -184,6 +191,10 @@ validate_cond_month(){
   valid_month=$return_val
 }
 
+validate_cond_weekday(){
+  validate_cond "$cond_string_weekday" "$weekday_cond" $weekday $weekday_counter
+  valid_weekday=$return_val
+}
 
 if [[ "$0" =~ cronfront\.sh ]]; then
 cron_cond_string="$1"
@@ -200,32 +211,37 @@ check_cond_minute "$cond_string_minute"
 check_cond_hour "$cond_string_hour"
 check_cond_day "$cond_string_day"
 check_cond_month "$cond_string_month"
+check_cond_weekday "$cond_string_weekday"
 
 generate_cond_minute "$cond_string_minute" 
 generate_cond_hour "$cond_string_hour"
 generate_cond_day "$cond_string_day"
 generate_cond_month "$cond_string_month"
+generate_cond_weekday "$cond_string_weekday"
 
-minute_counter=0
-hour_counter=0
-day_counter=1
-month_counter=1
+minute_counter=$min_minute
+hour_counter=$min_hour
+day_counter=$min_day
+month_counter=$min_month
+weekday_counter=$min_weekday
 
 while true
 do
-  read -r -a now_date <<< $(date -u +"%M %H %d %m");
+  read -r -a now_date <<< $(date -u +"%M %H %d %m %w");
   minute="${now_date[0]}"
   hour="${now_date[1]}"
   day="${now_date[2]}"
   month="${now_date[3]}"
-  echo "date: ${now_date[@]}"
+  weekday=$(( "${now_date[4]}" + 1 ))
+  echo "date: $minute $hour $day $month $weekday"
   echo "counters: $minute_counter $hour_counter $day_counter $month_counter"
 
   validate_cond_minute 
   validate_cond_hour
   validate_cond_day
   validate_cond_month
-  if ! (( $valid_minute + $valid_hour + $valid_day + $valid_month )); then
+  validate_cond_weekday
+  if ! (( $valid_minute + $valid_hour + $valid_day + $valid_month + $valid_weekday)); then
     eval "$commands &"
   fi
 
@@ -234,5 +250,6 @@ do
   ! ((minute_counter % 60)) && hour_counter=$((hour_counter + 1))
   ! ((minute_counter % 1440)) && day_counter=$((day_counter + 1))
   ! ((minute_counter % 44640)) && month_counter=$((month_counter + 1))
+  ! ((minute_counter % 10080)) && weekday_counter=$((weekday_counter + 1))
 done
 fi
